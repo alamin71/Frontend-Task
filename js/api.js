@@ -1,4 +1,6 @@
-const API_BASE = 'http://localhost:5000/api';
+// Local dev talks to the backend directly; a deployed build is served behind
+// nginx on the same host, which proxies /api to the backend port.
+const API_BASE = ['localhost', '127.0.0.1', ''].includes(location.hostname) ? 'http://localhost:5000/api' : '/api';
 
 function getToken() {
   return localStorage.getItem('token');
