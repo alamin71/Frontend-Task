@@ -48,6 +48,83 @@ function renderPagination(containerId, meta, onPageChange) {
   }
 }
 
+// ---------- Modal ----------
+// Generic centered modal: pass a title, a list of {name,label,type,value,options}
+// fields, and a submit callback that receives the collected form values.
+
+function openModal(title, fields, onSubmit) {
+  const overlay = document.getElementById('modalOverlay');
+  const modalTitle = document.getElementById('modalTitle');
+  const form = document.getElementById('modalForm');
+
+  modalTitle.textContent = title;
+  form.innerHTML = '';
+
+  fields.forEach((field) => {
+    const label = document.createElement('label');
+    label.textContent = field.label;
+
+    let input;
+    if (field.type === 'textarea') {
+      input = document.createElement('textarea');
+      input.value = field.value ?? '';
+    } else if (field.type === 'select') {
+      input = document.createElement('select');
+      field.options.forEach((opt) => {
+        const optionEl = document.createElement('option');
+        optionEl.value = opt;
+        optionEl.textContent = opt;
+        if (opt === field.value) optionEl.selected = true;
+        input.appendChild(optionEl);
+      });
+    } else {
+      input = document.createElement('input');
+      input.type = field.type || 'text';
+      input.value = field.value ?? '';
+    }
+
+    input.name = field.name;
+    label.appendChild(input);
+    form.appendChild(label);
+  });
+
+  const actions = document.createElement('div');
+  actions.className = 'modal-actions';
+  actions.innerHTML = `
+    <button type="button" class="btn-secondary" id="modalCancelBtn">Cancel</button>
+    <button type="submit">Save</button>
+  `;
+  form.appendChild(actions);
+
+  overlay.classList.remove('hidden');
+
+  function close() {
+    overlay.classList.add('hidden');
+    form.removeEventListener('submit', submitHandler);
+    document.getElementById('modalCancelBtn').removeEventListener('click', close);
+    overlay.removeEventListener('click', overlayClickHandler);
+  }
+
+  function submitHandler(e) {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const result = {};
+    fields.forEach((f) => {
+      result[f.name] = formData.get(f.name);
+    });
+    close();
+    onSubmit(result);
+  }
+
+  function overlayClickHandler(e) {
+    if (e.target === overlay) close();
+  }
+
+  form.addEventListener('submit', submitHandler);
+  document.getElementById('modalCancelBtn').addEventListener('click', close);
+  overlay.addEventListener('click', overlayClickHandler);
+}
+
 // ---------- Auth ----------
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -180,15 +257,20 @@ async function loadNotes(page) {
   });
 
   list.querySelectorAll('.edit-note').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const title = prompt('New title (blank = keep current):');
-      const content = prompt('New content (blank = keep current):');
-      const body = {};
-      if (title) body.title = title;
-      if (content) body.content = content;
-      if (Object.keys(body).length === 0) return;
-      await apiRequest(`/notes/${btn.dataset.id}`, { method: 'PATCH', body });
-      loadNotes(meta.page);
+    btn.addEventListener('click', () => {
+      const note = data.find((n) => n._id === btn.dataset.id);
+      openModal(
+        'Edit Note',
+        [
+          { name: 'title', label: 'Title', type: 'text', value: note.title },
+          { name: 'content', label: 'Content', type: 'textarea', value: note.content },
+        ],
+        async (result) => {
+          await apiRequest(`/notes/${btn.dataset.id}`, { method: 'PATCH', body: result });
+          loadNotes(meta.page);
+          showToast('Note updated', 'success');
+        },
+      );
     });
   });
 }
@@ -255,7 +337,7 @@ async function loadUsers(page) {
       <p>${escapeHtml(user.email)}</p>
       <small>Interests: ${(user.interests || []).map(escapeHtml).join(', ') || '-'}</small>
       <div class="actions">
-        <button type="button" data-id="${user._id}" class="toggle-role">Toggle Role</button>
+        <button type="button" data-id="${user._id}" class="edit-user">Edit</button>
         <button type="button" data-id="${user._id}" class="delete-user">Delete</button>
       </div>
     `;
@@ -272,12 +354,34 @@ async function loadUsers(page) {
     });
   });
 
-  list.querySelectorAll('.toggle-role').forEach((btn) => {
-    btn.addEventListener('click', async () => {
+  list.querySelectorAll('.edit-user').forEach((btn) => {
+    btn.addEventListener('click', () => {
       const user = data.find((u) => u._id === btn.dataset.id);
-      const newRole = user.role === 'admin' ? 'user' : 'admin';
-      await apiRequest(`/admin/users/${btn.dataset.id}`, { method: 'PATCH', body: { role: newRole } });
-      loadUsers(meta.page);
+      openModal(
+        'Edit User',
+        [
+          { name: 'name', label: 'Name', type: 'text', value: user.name },
+          { name: 'email', label: 'Email', type: 'email', value: user.email },
+          { name: 'role', label: 'Role', type: 'select', options: ['user', 'admin'], value: user.role },
+          {
+            name: 'interests',
+            label: 'Interests (comma separated)',
+            type: 'text',
+            value: (user.interests || []).join(', '),
+          },
+        ],
+        async (result) => {
+          const body = {
+            name: result.name,
+            email: result.email,
+            role: result.role,
+            interests: parseInterests(result.interests),
+          };
+          await apiRequest(`/admin/users/${btn.dataset.id}`, { method: 'PATCH', body });
+          loadUsers(meta.page);
+          showToast('User updated', 'success');
+        },
+      );
     });
   });
 }
