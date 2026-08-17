@@ -13,6 +13,27 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function showToast(message, type = 'info', duration = 3000) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('toast-hide');
+    toast.addEventListener('animationend', () => toast.remove(), { once: true });
+  }, duration);
+}
+
+(function showPendingToast() {
+  const pending = sessionStorage.getItem('pendingToast');
+  if (!pending) return;
+  sessionStorage.removeItem('pendingToast');
+  const { message, type } = JSON.parse(pending);
+  showToast(message, type);
+})();
+
 function renderPagination(containerId, meta, onPageChange) {
   const el = document.getElementById(containerId);
   el.innerHTML = '';
@@ -41,8 +62,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     setToken(data.token);
     currentUser = data.user;
     enterApp();
+    showToast('Logged in successfully', 'success');
   } catch (err) {
     errorEl.textContent = err.message;
+    showToast(err.message, 'error');
   }
 });
 
@@ -63,14 +86,17 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     setToken(data.token);
     currentUser = data.user;
     enterApp();
+    showToast('Account created successfully', 'success');
   } catch (err) {
     errorEl.textContent = err.message;
+    showToast(err.message, 'error');
   }
 });
 
 document.getElementById('logoutBtn').addEventListener('click', () => {
   setToken(null);
   currentUser = null;
+  sessionStorage.setItem('pendingToast', JSON.stringify({ message: 'Logged out successfully', type: 'success' }));
   location.reload();
 });
 
