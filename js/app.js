@@ -134,7 +134,7 @@ document.querySelectorAll('#appSection nav .tab-btn').forEach((btn) => {
 
     if (btn.dataset.view === 'notes') loadNotes(1);
     if (btn.dataset.view === 'admin') loadUsers(1);
-    if (btn.dataset.view === 'interests') loadInterests();
+    if (btn.dataset.view === 'interests') loadInterests(1);
   });
 });
 
@@ -284,10 +284,10 @@ async function loadUsers(page) {
 
 // ---------- Admin: Interests ----------
 
-document.getElementById('loadInterestsBtn').addEventListener('click', loadInterests);
+document.getElementById('loadInterestsBtn').addEventListener('click', () => loadInterests(1));
 
-async function loadInterests() {
-  const { data } = await apiRequest('/admin/users/grouped-by-interests');
+async function loadInterests(page) {
+  const { data, meta } = await apiRequest('/admin/users/grouped-by-interests', { params: { page, limit: 5 } });
   const list = document.getElementById('interestsList');
   list.innerHTML = '';
 
@@ -300,6 +300,8 @@ async function loadInterests() {
     `;
     list.appendChild(div);
   });
+
+  renderPagination('interestsPagination', meta, loadInterests);
 }
 
 // ---------- Bootstrap ----------
