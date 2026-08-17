@@ -13,6 +13,13 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function renderEmptyState(list, message) {
+  const p = document.createElement('p');
+  p.className = 'empty-state';
+  p.textContent = message;
+  list.appendChild(p);
+}
+
 function showToast(message, type = 'info', duration = 3000) {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
@@ -243,6 +250,10 @@ async function loadNotes(page) {
   const list = document.getElementById('notesList');
   list.innerHTML = '';
 
+  if (data.length === 0) {
+    renderEmptyState(list, 'No notes found.');
+  }
+
   data.forEach((note) => {
     const isOwner = note.owner === currentUser.id;
     const div = document.createElement('div');
@@ -327,6 +338,10 @@ async function loadPosts(userId, page) {
     const list = document.getElementById('postsList');
     list.innerHTML = '';
 
+    if (data.length === 0) {
+      renderEmptyState(list, 'No posts found for this user.');
+    }
+
     data.forEach((post) => {
       const div = document.createElement('div');
       div.className = 'card';
@@ -374,6 +389,10 @@ async function loadUsers(page) {
   const { data, meta } = result;
   const list = document.getElementById('usersList');
   list.innerHTML = '';
+
+  if (data.length === 0) {
+    renderEmptyState(list, 'No users found.');
+  }
 
   data.forEach((user) => {
     const div = document.createElement('div');
@@ -451,6 +470,10 @@ async function loadInterests(page) {
     const { data, meta } = await apiRequest('/admin/users/grouped-by-interests', { params: { page, limit: 5 } });
     const list = document.getElementById('interestsList');
     list.innerHTML = '';
+
+    if (data.length === 0) {
+      renderEmptyState(list, 'No interest groups found.');
+    }
 
     data.forEach((group) => {
       const div = document.createElement('div');
