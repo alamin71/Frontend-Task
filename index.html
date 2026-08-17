@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Secure Notes</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header>
+  <h1>Secure Notes</h1>
+  <div id="userInfo" class="hidden">
+    <span id="userLabel"></span>
+    <button id="logoutBtn">Logout</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- Auth -->
+  <section id="authSection">
+    <div class="tabs">
+      <button type="button" class="tab-btn active" data-tab="login">Login</button>
+      <button type="button" class="tab-btn" data-tab="register">Register</button>
+    </div>
+
+    <form id="loginForm" class="tab-panel active">
+      <input type="email" id="loginEmail" placeholder="Email" required />
+      <input type="password" id="loginPassword" placeholder="Password" required />
+      <button type="submit">Login</button>
+      <p class="error" id="loginError"></p>
+    </form>
+
+    <form id="registerForm" class="tab-panel">
+      <input type="text" id="regName" placeholder="Name" required />
+      <input type="email" id="regEmail" placeholder="Email" required />
+      <input type="password" id="regPassword" placeholder="Password (min 6 chars)" required />
+      <input type="text" id="regInterests" placeholder="Interests (comma separated, optional)" />
+      <button type="submit">Register</button>
+      <p class="error" id="registerError"></p>
+    </form>
+  </section>
+
+  <!-- App (after login) -->
+  <section id="appSection" class="hidden">
+    <nav class="tabs">
+      <button type="button" class="tab-btn active" data-view="notes">Notes</button>
+      <button type="button" class="tab-btn" data-view="posts">Posts</button>
+      <button type="button" class="tab-btn admin-only hidden" data-view="admin">Admin: Users</button>
+      <button type="button" class="tab-btn admin-only hidden" data-view="interests">Admin: Interests</button>
+    </nav>
+
+    <!-- Notes -->
+    <div id="view-notes" class="view active">
+      <h2 id="notesHeading">My Notes</h2>
+      <form id="noteForm" class="inline-form">
+        <input type="text" id="noteTitle" placeholder="Title" required />
+        <textarea id="noteContent" placeholder="Content" required></textarea>
+        <button type="submit">Add Note</button>
+      </form>
+      <div id="notesList" class="list"></div>
+      <div id="notesPagination" class="pagination"></div>
+    </div>
+
+    <!-- Posts -->
+    <div id="view-posts" class="view">
+      <h2>Posts</h2>
+      <form id="postForm" class="inline-form">
+        <input type="text" id="postTitle" placeholder="Title" required />
+        <textarea id="postContent" placeholder="Content" required></textarea>
+        <button type="submit">Write Post</button>
+      </form>
+
+      <h3>View a user's posts</h3>
+      <div class="row">
+        <input type="text" id="postsUserId" placeholder="User ID (blank = me)" />
+        <button type="button" id="loadPostsBtn">Load</button>
+      </div>
+      <div id="postsList" class="list"></div>
+      <div id="postsPagination" class="pagination"></div>
+    </div>
+
+    <!-- Admin: Users -->
+    <div id="view-admin" class="view">
+      <h2>Manage Users</h2>
+      <form id="createUserForm" class="inline-form">
+        <input type="text" id="newUserName" placeholder="Name" required />
+        <input type="email" id="newUserEmail" placeholder="Email" required />
+        <input type="password" id="newUserPassword" placeholder="Password" required />
+        <select id="newUserRole">
+          <option value="user">user</option>
+          <option value="admin">admin</option>
+        </select>
+        <input type="text" id="newUserInterests" placeholder="Interests (comma separated)" />
+        <button type="submit">Create User</button>
+      </form>
+      <div id="usersList" class="list"></div>
+      <div id="usersPagination" class="pagination"></div>
+    </div>
+
+    <!-- Admin: Interests -->
+    <div id="view-interests" class="view">
+      <h2>Users Grouped by Interests</h2>
+      <button type="button" id="loadInterestsBtn">Refresh</button>
+      <div id="interestsList" class="list"></div>
+    </div>
+
+  </section>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
