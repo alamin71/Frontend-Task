@@ -244,16 +244,21 @@ async function loadNotes(page) {
   list.innerHTML = '';
 
   data.forEach((note) => {
+    const isOwner = note.owner === currentUser.id;
     const div = document.createElement('div');
     div.className = 'card';
     div.innerHTML = `
       <h3>${escapeHtml(note.title)}</h3>
       <p>${escapeHtml(note.content)}</p>
       <small>Owner: ${escapeHtml(note.owner)}</small>
-      <div class="actions">
+      ${
+        isOwner
+          ? `<div class="actions">
         <button type="button" data-id="${note._id}" class="edit-note">Edit</button>
         <button type="button" data-id="${note._id}" class="delete-note">Delete</button>
-      </div>
+      </div>`
+          : ''
+      }
     `;
     list.appendChild(div);
   });
@@ -376,6 +381,7 @@ async function loadUsers(page) {
     div.innerHTML = `
       <h3>${escapeHtml(user.name)} <span class="badge">${escapeHtml(user.role)}</span></h3>
       <p>${escapeHtml(user.email)}</p>
+      <small>ID: ${escapeHtml(user._id)}</small><br />
       <small>Interests: ${(user.interests || []).map(escapeHtml).join(', ') || '-'}</small>
       <div class="actions">
         <button type="button" data-id="${user._id}" class="edit-user">Edit</button>
