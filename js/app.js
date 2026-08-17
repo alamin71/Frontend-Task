@@ -221,13 +221,25 @@ document.getElementById('noteForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const title = document.getElementById('noteTitle').value;
   const content = document.getElementById('noteContent').value;
-  await apiRequest('/notes', { method: 'POST', body: { title, content } });
-  e.target.reset();
-  loadNotes(1);
+  try {
+    await apiRequest('/notes', { method: 'POST', body: { title, content } });
+    e.target.reset();
+    loadNotes(1);
+    showToast('Note created', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
 });
 
 async function loadNotes(page) {
-  const { data, meta } = await apiRequest('/notes', { params: { page, limit: 5 } });
+  let result;
+  try {
+    result = await apiRequest('/notes', { params: { page, limit: 5 } });
+  } catch (err) {
+    showToast(err.message, 'error');
+    return;
+  }
+  const { data, meta } = result;
   const list = document.getElementById('notesList');
   list.innerHTML = '';
 
@@ -251,8 +263,13 @@ async function loadNotes(page) {
   list.querySelectorAll('.delete-note').forEach((btn) => {
     btn.addEventListener('click', async () => {
       if (!confirm('Delete this note?')) return;
-      await apiRequest(`/notes/${btn.dataset.id}`, { method: 'DELETE' });
-      loadNotes(meta.page);
+      try {
+        await apiRequest(`/notes/${btn.dataset.id}`, { method: 'DELETE' });
+        loadNotes(meta.page);
+        showToast('Note deleted', 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
     });
   });
 
@@ -266,9 +283,13 @@ async function loadNotes(page) {
           { name: 'content', label: 'Content', type: 'textarea', value: note.content },
         ],
         async (result) => {
-          await apiRequest(`/notes/${btn.dataset.id}`, { method: 'PATCH', body: result });
-          loadNotes(meta.page);
-          showToast('Note updated', 'success');
+          try {
+            await apiRequest(`/notes/${btn.dataset.id}`, { method: 'PATCH', body: result });
+            loadNotes(meta.page);
+            showToast('Note updated', 'success');
+          } catch (err) {
+            showToast(err.message, 'error');
+          }
         },
       );
     });
@@ -281,9 +302,13 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const title = document.getElementById('postTitle').value;
   const content = document.getElementById('postContent').value;
-  await apiRequest('/posts', { method: 'POST', body: { title, content } });
-  e.target.reset();
-  alert('Post created.');
+  try {
+    await apiRequest('/posts', { method: 'POST', body: { title, content } });
+    e.target.reset();
+    showToast('Post created', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
 });
 
 document.getElementById('loadPostsBtn').addEventListener('click', () => {
@@ -292,22 +317,26 @@ document.getElementById('loadPostsBtn').addEventListener('click', () => {
 });
 
 async function loadPosts(userId, page) {
-  const { data, meta } = await apiRequest(`/posts/user/${userId}`, { params: { page, limit: 5 } });
-  const list = document.getElementById('postsList');
-  list.innerHTML = '';
+  try {
+    const { data, meta } = await apiRequest(`/posts/user/${userId}`, { params: { page, limit: 5 } });
+    const list = document.getElementById('postsList');
+    list.innerHTML = '';
 
-  data.forEach((post) => {
-    const div = document.createElement('div');
-    div.className = 'card';
-    div.innerHTML = `
-      <h3>${escapeHtml(post.title)}</h3>
-      <p>${escapeHtml(post.content)}</p>
-      <small>By ${escapeHtml(post.author.name)} (${escapeHtml(post.author.email)})</small>
-    `;
-    list.appendChild(div);
-  });
+    data.forEach((post) => {
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.innerHTML = `
+        <h3>${escapeHtml(post.title)}</h3>
+        <p>${escapeHtml(post.content)}</p>
+        <small>By ${escapeHtml(post.author.name)} (${escapeHtml(post.author.email)})</small>
+      `;
+      list.appendChild(div);
+    });
 
-  renderPagination('postsPagination', meta, (p) => loadPosts(userId, p));
+    renderPagination('postsPagination', meta, (p) => loadPosts(userId, p));
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
 }
 
 // ---------- Admin: Users ----------
@@ -319,13 +348,25 @@ document.getElementById('createUserForm').addEventListener('submit', async (e) =
   const password = document.getElementById('newUserPassword').value;
   const role = document.getElementById('newUserRole').value;
   const interests = parseInterests(document.getElementById('newUserInterests').value);
-  await apiRequest('/admin/users', { method: 'POST', body: { name, email, password, role, interests } });
-  e.target.reset();
-  loadUsers(1);
+  try {
+    await apiRequest('/admin/users', { method: 'POST', body: { name, email, password, role, interests } });
+    e.target.reset();
+    loadUsers(1);
+    showToast('User created', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
 });
 
 async function loadUsers(page) {
-  const { data, meta } = await apiRequest('/admin/users', { params: { page, limit: 5 } });
+  let result;
+  try {
+    result = await apiRequest('/admin/users', { params: { page, limit: 5 } });
+  } catch (err) {
+    showToast(err.message, 'error');
+    return;
+  }
+  const { data, meta } = result;
   const list = document.getElementById('usersList');
   list.innerHTML = '';
 
@@ -349,8 +390,13 @@ async function loadUsers(page) {
   list.querySelectorAll('.delete-user').forEach((btn) => {
     btn.addEventListener('click', async () => {
       if (!confirm('Delete this user?')) return;
-      await apiRequest(`/admin/users/${btn.dataset.id}`, { method: 'DELETE' });
-      loadUsers(1);
+      try {
+        await apiRequest(`/admin/users/${btn.dataset.id}`, { method: 'DELETE' });
+        loadUsers(1);
+        showToast('User deleted', 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
     });
   });
 
@@ -377,9 +423,13 @@ async function loadUsers(page) {
             role: result.role,
             interests: parseInterests(result.interests),
           };
-          await apiRequest(`/admin/users/${btn.dataset.id}`, { method: 'PATCH', body });
-          loadUsers(meta.page);
-          showToast('User updated', 'success');
+          try {
+            await apiRequest(`/admin/users/${btn.dataset.id}`, { method: 'PATCH', body });
+            loadUsers(meta.page);
+            showToast('User updated', 'success');
+          } catch (err) {
+            showToast(err.message, 'error');
+          }
         },
       );
     });
@@ -391,21 +441,25 @@ async function loadUsers(page) {
 document.getElementById('loadInterestsBtn').addEventListener('click', () => loadInterests(1));
 
 async function loadInterests(page) {
-  const { data, meta } = await apiRequest('/admin/users/grouped-by-interests', { params: { page, limit: 5 } });
-  const list = document.getElementById('interestsList');
-  list.innerHTML = '';
+  try {
+    const { data, meta } = await apiRequest('/admin/users/grouped-by-interests', { params: { page, limit: 5 } });
+    const list = document.getElementById('interestsList');
+    list.innerHTML = '';
 
-  data.forEach((group) => {
-    const div = document.createElement('div');
-    div.className = 'card';
-    div.innerHTML = `
-      <h3>${escapeHtml(group._id)} <span class="badge">${group.count}</span></h3>
-      <ul>${group.users.map((u) => `<li>${escapeHtml(u.name)} (${escapeHtml(u.email)})</li>`).join('')}</ul>
-    `;
-    list.appendChild(div);
-  });
+    data.forEach((group) => {
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.innerHTML = `
+        <h3>${escapeHtml(group._id)} <span class="badge">${group.count}</span></h3>
+        <ul>${group.users.map((u) => `<li>${escapeHtml(u.name)} (${escapeHtml(u.email)})</li>`).join('')}</ul>
+      `;
+      list.appendChild(div);
+    });
 
-  renderPagination('interestsPagination', meta, loadInterests);
+    renderPagination('interestsPagination', meta, loadInterests);
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
 }
 
 // ---------- Bootstrap ----------
